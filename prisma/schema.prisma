@@ -1,0 +1,39 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../data/bot.db"
+}
+
+model VideoLibrary {
+  id          String    @id @default(cuid())
+  source      String    // "youtube" | "douyin"
+  originalUrl String    @unique
+  localPath   String
+  title       String?
+  caption     String?   // Caption do AI viết (tiếng Anh)
+  duration    Int?      // giây
+  fileSize    Int?      // bytes
+  status      String    @default("pending_caption")
+  // pending_caption → có video, chờ AI viết caption
+  // ready         → sẵn sàng đăng
+  // publishing    → đang upload lên X
+  // published     → đã đăng
+  // failed        → lỗi
+  publishedAt DateTime?
+  tweetId     String?   // ID tweet sau khi đăng
+  createdAt   DateTime  @default(now())
+}
+
+model PublishLog {
+  id        String   @id @default(cuid())
+  videoId   String
+  tweetId   String?
+  status    String   // success | failed
+  error     String?
+  createdAt DateTime @default(now())
+}
