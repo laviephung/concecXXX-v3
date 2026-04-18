@@ -7,6 +7,7 @@ import { createLogger } from "./utils/logger";
 import { processPendingCaptions } from "./processor/caption-generator";
 import { publishOne } from "./publisher/twitter-publisher";
 import { publishOneArticle } from "./publisher/article-publisher";
+import { crawlNews } from "./downloader/twz-scraper";
 import { cleanupPublishedVideos } from "./downloader/channel-downloader";
 import { getPublishingStatus } from "./bot/telegram-bot";
 import db from "./db";
@@ -61,7 +62,15 @@ async function publishNextInQueue() {
 
     let ok = false;
     if (mode === "news") {
-      logger.info("Chế độ News, đang lấy Bài Báo...");
+      logger.info("Chế độ News, đang tự động crawl tin mới nhất...");
+      try {
+        // Tự động crawl 5 bài mới nhất để AI chọn bài hot nhất trước khi đăng
+        await crawlNews(5);
+      } catch (crawlErr: any) {
+        logger.error(`Lỗi tự động crawl news: ${crawlErr.message}`);
+      }
+      
+      logger.info("Đang lấy Bài Báo để đăng...");
       ok = await publishOneArticle();
     } else {
       logger.info("Chế độ Video, đang lấy Video...");

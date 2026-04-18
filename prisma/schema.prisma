@@ -37,3 +37,21 @@ model PublishLog {
   error     String?
   createdAt DateTime @default(now())
 }
+
+model ArticleLibrary {
+  id          String    @id @default(cuid())
+  source      String    // "twz"
+  originalUrl String    @unique
+  localPath   String?   // Path ảnh đã tải
+  title       String?
+  content     String?   // Caption/Bài viết do AI rewrite
+  status      String    @default("ready")
+  publishedAt DateTime?
+  tweetId     String?
+  createdAt   DateTime  @default(now())
+}
+
+model BotSettings {
+  id    String @id @default("default")
+  mode  String @default("video") // "video" hoặc "news"
+}

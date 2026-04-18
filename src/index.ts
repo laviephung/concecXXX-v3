@@ -31,6 +31,8 @@ async function setCommandMenu() {
     { command: "addig",         description: "📸 Tải 1 video Instagram (dán URL theo sau)" },
     { command: "crawlig",       description: "📸 Tải full profile Instagram (@username)" },
     { command: "retry",         description: "🔄 Thử lại các video bị lỗi" },
+    { command: "mode",          description: "🎛️ Chuyển chế độ: /mode news hoặc /mode video" },
+    { command: "crawlnews",     description: "📰 Quét tin tức nóng ngay bây giờ" },
     { command: "start",         description: "🤖 Hiện menu trợ giúp" },
   ]);
   logger.success("Đã set menu lệnh cho bot Telegram");
