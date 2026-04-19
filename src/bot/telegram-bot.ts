@@ -9,6 +9,8 @@ import { downloadAllChannels, cleanupPublishedVideos, getDiskUsage } from "../do
 import { downloadInstagramOne, downloadInstagramProfile } from "../downloader/instagram-downloader";
 import { triggerPublishNow } from "../scheduler";
 import { crawlNews } from "../downloader/twz-scraper";
+import { crawlMarketNews } from "../downloader/market-scraper";
+import { crawlGeoNews } from "../downloader/aljazeera-scraper";
 import db from "../db";
 
 const logger = createLogger("TelegramBot");
@@ -44,7 +46,9 @@ export function startTelegramBot(): TelegramBot {
       `*📰 Báo Điện Tử (News):*\n` +
       `/mode news - Chuyển sang đăng báo\n` +
       `/mode video - Chuyển về đăng video\n` +
-      `/crawlnews - Quét tìm điểm báo nóng\n\n` +
+      `/crawlnews - Quét tìm điểm báo nóng\n` +
+      `/crawlmarket - Quét tin tức thị trường (Crypto)\n` +
+      `/crawlgeo - Quét tin tức địa chính trị (Al Jazeera)\n\n` +},{find:},{find:
       `*📊 Quản lý:*\n` +
       `/status - Thống kê + dung lượng\n` +
       `/queue - Hàng đợi (Video & News)\n` +
@@ -333,12 +337,36 @@ export function startTelegramBot(): TelegramBot {
   // ─── /crawlnews (New!) ────────────────────────────────────────────────────
   bot.onText(/\/crawlnews/, async (msg) => {
     if (!isAdmin(msg.from?.id)) return;
-    await reply(msg.chat.id, `⏳ Đang quét báo TWZ lấy tin mới nhất.\n👉 AI đang phân tích bài có độ Hot cao nhất...`);
+    await reply(msg.chat.id, `⏳ Đang cào tin tức nóng từ TWZ...\n_Có thể mất 1-2 phút_`);
     try {
       const count = await crawlNews(5);
-      await reply(msg.chat.id, `✅ Báo cáo News:\nĐã chắt lọc thành công *${count}* bài bá đạo (Sẵn sàng đăng X).`);
-    } catch(err: any) {
-      await reply(msg.chat.id, `❌ Quét báo lỗi: ${err.message}`);
+      await reply(msg.chat.id, `✅ Đã cào xong!\n🔥 Tìm thấy *${count}* bài báo HOT đã sẵn sàng đăng.`);
+    } catch (err: any) {
+      await reply(msg.chat.id, `❌ Lỗi cào news: ${err.message}`);
+    }
+  });
+
+  // ─── /crawlmarket (New!) ───────────────────────────────────────────────────
+  bot.onText(/\/crawlmarket/, async (msg) => {
+    if (!isAdmin(msg.from?.id)) return;
+    await reply(msg.chat.id, `⏳ Đang cào tin tức thị trường mới nhất...\n_Đang lấy từ CoinDesk RSS_`);
+    try {
+      const count = await crawlMarketNews(5);
+      await reply(msg.chat.id, `✅ Đã cào xong!\n📈 Đã lưu *${count}* tin thị trường mới nhất.`);
+    } catch (err: any) {
+      await reply(msg.chat.id, `❌ Lỗi cào market: ${err.message}`);
+    }
+  });
+
+  // ─── /crawlgeo (New!) ──────────────────────────────────────────────────────
+  bot.onText(/\/crawlgeo/, async (msg) => {
+    if (!isAdmin(msg.from?.id)) return;
+    await reply(msg.chat.id, `⏳ Đang cào tin tức địa chính trị mới nhất...\n_Đang lấy từ Al Jazeera RSS_`);
+    try {
+      const count = await crawlGeoNews(5);
+      await reply(msg.chat.id, `✅ Đã cào xong!\n🌍 Đã lưu *${count}* tin địa chính trị mới nhất.`);
+    } catch (err: any) {
+      await reply(msg.chat.id, `❌ Lỗi cào geo: ${err.message}`);
     }
   });
 

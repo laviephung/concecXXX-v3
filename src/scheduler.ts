@@ -8,6 +8,8 @@ import { processPendingCaptions } from "./processor/caption-generator";
 import { publishOne } from "./publisher/twitter-publisher";
 import { publishOneArticle } from "./publisher/article-publisher";
 import { crawlNews } from "./downloader/twz-scraper";
+import { crawlMarketNews } from "./downloader/market-scraper";
+import { crawlGeoNews } from "./downloader/aljazeera-scraper";
 import { cleanupPublishedVideos } from "./downloader/channel-downloader";
 import { getPublishingStatus } from "./bot/telegram-bot";
 import db from "./db";
@@ -64,10 +66,12 @@ async function publishNextInQueue() {
     if (mode === "news") {
       logger.info("Chế độ News, đang tự động crawl tin mới nhất...");
       try {
-        // Tự động crawl 5 bài mới nhất để AI chọn bài hot nhất trước khi đăng
-        await crawlNews(5);
+        // Tự động crawl từ cả 3 nguồn: Quân sự (TWZ), Thị trường (CoinDesk), Địa chính trị (Al Jazeera)
+        await crawlNews(2);
+        await crawlMarketNews(2);
+        await crawlGeoNews(2);
       } catch (crawlErr: any) {
-        logger.error(`Lỗi tự động crawl news: ${crawlErr.message}`);
+        logger.error(`Lỗi tự động crawl news/market/geo: ${crawlErr.message}`);
       }
       
       logger.info("Đang lấy Bài Báo để đăng...");
