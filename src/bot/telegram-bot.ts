@@ -48,7 +48,7 @@ export function startTelegramBot(): TelegramBot {
       `/mode video - Chuyển về đăng video\n` +
       `/crawlnews - Quét tìm điểm báo nóng\n` +
       `/crawlmarket - Quét tin tức thị trường (Crypto)\n` +
-      `/crawlgeo - Quét tin tức địa chính trị (Al Jazeera)\n\n` +},{find:},{find:
+      `/crawlgeo - Quét tin tức địa chính trị (Al Jazeera)\n\n` +
       `*📊 Quản lý:*\n` +
       `/status - Thống kê + dung lượng\n` +
       `/queue - Hàng đợi (Video & News)\n` +
@@ -290,40 +290,36 @@ export function startTelegramBot(): TelegramBot {
         msg.chat.id,
         "❌ Cú pháp:\n" +
         "`/crawlig @username`\n" +
-        "`/crawlig https://www.instagram.com/username/`"
+        "`/crawlig https://www.instagram.com/username`"
       );
       return;
     }
-    await reply(msg.chat.id, `⏳ Đang quét profile Instagram: ${input}\n_Có thể mất vài phút..._`);
+    const username = input.startsWith("@") ? input.substring(1) : input.split("/").filter(Boolean).pop();
+    if (!username) return;
+
+    await reply(msg.chat.id, `⏳ Đang quét profile Instagram: @${username}\n_Có thể mất vài phút_`);
     try {
-      const count = await downloadInstagramProfile(input, 10);
-      const stats = await getVideoStats();
-      await reply(
-        msg.chat.id,
-        `✅ Tải xong!\n` +
-        `📦 Đã tải: *${count}* video mới\n` +
-        `📋 Chờ đăng: *${stats.ready + stats.pending}* video\n` +
-        `💾 Dung lượng: ${getDiskUsage()}`
-      );
+      const count = await downloadInstagramProfile(username);
+      await reply(msg.chat.id, `✅ Đã quét xong!\n📸 Tìm thấy *${count}* video mới từ @${username}`);
     } catch (err: any) {
-      await reply(msg.chat.id, `❌ Lỗi: ${err.message}\n\n💡 Đảm bảo đã đăng nhập Instagram trên Chrome`);
+      await reply(msg.chat.id, `❌ Lỗi: ${err.message}`);
     }
   });
 
-  // ─── /retry ───────────────────────────────────────────────────────────────
+  // ─── /retry ──────────────────────────────────────────────────────────────
   bot.onText(/\/retry/, async (msg) => {
     if (!isAdmin(msg.from?.id)) return;
-    const count = await db.videoLibrary.updateMany({
-      where: { status: "failed", localPath: { not: "" } },
-      data: { status: "pending_caption" },
+    const result = await db.videoLibrary.updateMany({
+      where: { status: "failed" },
+      data: { status: "ready" },
     });
-    await reply(msg.chat.id, `🔄 Đã đưa ${count.count} video vào hàng đợi lại`);
+    await reply(msg.chat.id, `🔄 Đã đưa *${result.count}* video lỗi quay lại hàng đợi.`);
   });
 
-  // ─── /mode (New!) ─────────────────────────────────────────────────────────
+  // ─── /mode (video|news) ──────────────────────────────────────────────────
   bot.onText(/\/mode (video|news)/, async (msg, match) => {
     if (!isAdmin(msg.from?.id)) return;
-    const mode = match?.[1]?.trim().toLowerCase();
+    const mode = match?.[1] as "video" | "news";
     
     await db.botSettings.upsert({
       where: { id: "default" },
@@ -375,4 +371,6 @@ export function startTelegramBot(): TelegramBot {
   return bot;
 }
 
-export function getPublishingStatus() { return isPublishing; }
+export function getPublishingStatus() {
+  return isPublishing;
+}
