@@ -64,14 +64,21 @@ async function publishNextInQueue() {
 
     let ok = false;
     if (mode === "news") {
-      logger.info("Chế độ News, đang tự động crawl tin mới nhất...");
+      logger.info("Chế độ News, đang dọn dẹp tin cũ và crawl tin mới nhất...");
       try {
+        // Xóa tất cả các tin chưa đăng (status: ready) để không đăng tin cũ của ngày hôm trước
+        const deleted = await db.articleLibrary.deleteMany({
+          where: { status: "ready" }
+        });
+        logger.info(`Đã dọn dẹp ${deleted.count} tin cũ chưa đăng.`);
+
         // Tự động crawl từ cả 3 nguồn: Quân sự (TWZ), Thị trường (CoinDesk), Địa chính trị (Al Jazeera)
+        // Cào số lượng ít (mỗi nguồn 2-3 tin) để đăng ngay tin nóng nhất
         await crawlNews(2);
         await crawlMarketNews(2);
         await crawlGeoNews(2);
       } catch (crawlErr: any) {
-        logger.error(`Lỗi tự động crawl news/market/geo: ${crawlErr.message}`);
+        logger.error(`Lỗi dọn dẹp hoặc crawl news/market/geo: ${crawlErr.message}`);
       }
       
       logger.info("Đang lấy Bài Báo để đăng...");

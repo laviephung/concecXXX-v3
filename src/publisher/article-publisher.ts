@@ -36,10 +36,10 @@ export async function publishOneArticle(): Promise<boolean> {
   for (const source of sourcePriority) {
     article = await db.articleLibrary.findFirst({
       where: { status: "ready", source: source },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: "desc" }, // Đổi từ asc sang desc để lấy tin mới nhất vừa cào
     });
     if (article) {
-      logger.info(`Tìm thấy bài báo từ nguồn ưu tiên: ${source}`);
+      logger.info(`Tìm thấy bài báo MỚI NHẤT từ nguồn ưu tiên: ${source}`);
       break;
     }
   }
@@ -48,7 +48,7 @@ export async function publishOneArticle(): Promise<boolean> {
   if (!article) {
     article = await db.articleLibrary.findFirst({
       where: { status: "ready" },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: "desc" }, // Đổi từ asc sang desc để lấy tin mới nhất
     });
   }
 
