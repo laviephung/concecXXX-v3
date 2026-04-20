@@ -64,15 +64,15 @@ export async function publishOneArticle(): Promise<boolean> {
 
   try {
     let mediaIds: string[] = [];
-    // 50% chance to skip image even if it exists
-    const shouldIncludeImage = Math.random() > 0.5;
+    // 80% chance to include image if it exists (increased from 50% for better visual)
+    const shouldIncludeImage = Math.random() > 0.2;
     
     if (shouldIncludeImage && article.localPath && fs.existsSync(article.localPath)) {
       logger.info(`Đang upload ảnh bài báo: ${article.localPath}`);
       const mediaId = await rwClient.v1.uploadMedia(article.localPath);
       mediaIds.push(mediaId);
     } else if (article.localPath && fs.existsSync(article.localPath)) {
-      logger.info(`Bỏ qua ảnh bài báo theo tỉ lệ 50%: ${article.localPath}`);
+      logger.info(`Bỏ qua ảnh bài báo theo tỉ lệ ngẫu nhiên: ${article.localPath}`);
     }
 
     const tweetOpts: any = { text: article.content || article.title };

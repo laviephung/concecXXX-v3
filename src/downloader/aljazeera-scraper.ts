@@ -65,13 +65,13 @@ Rewrite the news below into a SHARP, ANALYTICAL, and PROVOCATIVE post.
 STRICT RULES:
 - MUST be in English
 - Keep it SHORT (max 6 lines)
-- First line = GEOPOLITICAL IMPACT (e.g., 🌍 GEOPOLITICS, 🛡️ STRATEGY, ⚠️ ESCALATION)
+- First line = A powerful, attention-grabbing hook (NO generic labels like "GEOPOLITICS:" or "ESCALATION:")
 - Use a serious, authoritative, yet engaging tone
 - Focus on the shift in power, regional stability, or strategic implications
 - No boring explanation
 
 OUTPUT FORMAT:
-Line 1: Impact Hook
+Line 1: Hook (The core geopolitical impact)
 Line 2-5: Analysis/Content
 Last line: A deep question that makes readers think about the future of the region
 
@@ -117,9 +117,11 @@ export async function crawlGeoNews(limit: number = 5): Promise<number> {
 
       logger.info(`Đang xử lý tin địa chính trị mới: ${title}`);
 
-      // Lấy ảnh từ media:content hoặc enclosure nếu có
-      let imageUrl = $(item).find("media\\:content, content").attr("url") || 
-                     $(item).find("enclosure").attr("url");
+      // Lấy ảnh từ media:content, content, hoặc enclosure
+      let imageUrl = $(item).find("media\\:content").attr("url") || 
+                     $(item).find("content").attr("url") ||
+                     $(item).find("enclosure").attr("url") ||
+                     $(item).find("media\\:thumbnail").attr("url");
       
       let localPath = null;
       if (imageUrl) {

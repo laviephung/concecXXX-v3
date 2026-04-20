@@ -64,13 +64,13 @@ Rewrite the market news below into a PUNCHY, INSIGHTFUL, and URGENT post.
 STRICT RULES:
 - MUST be in English
 - Keep it SHORT (max 5 lines)
-- First line = MARKET IMPACT (e.g., 🚨 BREAKING, 📉 DUMP, 📈 PUMP)
+- First line = A sharp market impact hook (NO generic labels like "MARKET IMPACT:")
 - Use professional yet aggressive trading tone
 - Focus on what this means for the price or the industry
 - No boring explanation
 
 OUTPUT FORMAT:
-Line 1: Impact Hook
+Line 1: Impact Hook (e.g., 🚨 BREAKING, 📉 DUMP, 📈 PUMP followed by the news)
 Line 2-4: Analysis/Content
 Last line: A call to action or a sharp question for traders
 
@@ -117,9 +117,11 @@ export async function crawlMarketNews(limit: number = 5): Promise<number> {
 
       logger.info(`Đang xử lý tin mới: ${title}`);
 
-      // Lấy ảnh từ media:content hoặc enclosure nếu có
-      let imageUrl = $(item).find("media\\:content, content").attr("url") || 
-                     $(item).find("enclosure").attr("url");
+      // Lấy ảnh từ media:content, content, hoặc enclosure
+      let imageUrl = $(item).find("media\\:content").attr("url") || 
+                     $(item).find("content").attr("url") ||
+                     $(item).find("enclosure").attr("url") ||
+                     $(item).find("media\\:thumbnail").attr("url");
       
       let localPath = null;
       if (imageUrl) {
