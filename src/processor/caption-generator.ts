@@ -22,18 +22,18 @@ async function generateCaption(title: string): Promise<string | null> {
       messages: [
         {
           role: "system",
-          content: `You write short, punchy English captions for viral entertainment videos (troll, drama, funny moments).
+          content: `You write short, punchy Japanese captions for viral entertainment videos (troll, drama, funny moments).
 Rules:
-- Max 200 characters (Twitter limit)
-- Casual, witty tone - like a meme page
-- Add 2-3 relevant hashtags at the end
-- No Chinese characters
+- Max 140 characters (Twitter limit)
+- Use casual, funny, and witty Japanese (slang is okay, like a Japanese meme page)
+- Tone: Hilarious, sarcastic, or dramatic depending on the title
+- Add 2-3 relevant Japanese hashtags at the end (e.g., #おもしろ #あるある #爆笑)
 - Never mention the video source or platform
-- Make it feel native English, not translated`,
+- Make it feel like a native Japanese person wrote it, not a translation`,
         },
         {
           role: "user",
-          content: `Write a caption for this video: "${title}"`,
+          content: `Write a funny Japanese caption for this video: "${title}"`,
         },
       ],
     });
@@ -65,7 +65,7 @@ export async function processPendingCaptions(): Promise<void> {
       await db.videoLibrary.update({
         where: { id: video.id },
         data: {
-          caption: "Wait for it... 😂 #viral #funny #trending",
+          caption: "最後まで見て 😂 #おもしろ #あるある #爆笑",
           status: "ready",
         },
       });
@@ -85,7 +85,7 @@ export async function processPendingCaptions(): Promise<void> {
       await db.videoLibrary.update({
         where: { id: video.id },
         data: {
-          caption: "You won't believe this 😳 #viral #drama #trending",
+          caption: "これはヤバい 😳 #おもしろ #衝撃 #あるある",
           status: "ready",
         },
       });
