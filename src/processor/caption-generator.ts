@@ -5,6 +5,8 @@ import OpenAI from "openai";
 import { config } from "../config";
 import { createLogger } from "../utils/logger";
 import db from "../db";
+import { editVideo } from "./video-editor";
+import * as fs from "fs";
 
 const logger = createLogger("CaptionAI");
 
@@ -22,26 +24,36 @@ async function generateCaption(title: string): Promise<string | null> {
       messages: [
         {
           role: "system",
-          content: `You write short, punchy Japanese captions for viral entertainment videos (troll, drama, funny moments).
-Rules:
-- Max 140 characters (Twitter limit)
-- Use casual, funny, and witty Japanese (slang is okay, like a Japanese meme page)
-- Tone: Hilarious, sarcastic, or dramatic depending on the title
-- Add 2-3 relevant Japanese hashtags at the end (e.g., #おもしろ #あるある #爆笑)
-- Never mention the video source or platform
-- Make it feel like a native Japanese person wrote it, not a translation`,
+          content: `You are a Japanese viral content creator. For a given video title, generate:
+1. A punchy Twitter caption (max 140 chars, with hashtags).
+2. A "Top Text" for the video (short, catchy title in Japanese).
+3. A "Bottom Text" for the video (funny reaction or call to action in Japanese).
+
+Return ONLY a JSON object:
+{
+  "caption": "...",
+  "topText": "...",
+  "bottomText": "..."
+}`,
         },
         {
           role: "user",
-          content: `Write a funny Japanese caption for this video: "${title}"`,
+          content: `Video title: "${title}"`,
         },
       ],
     });
 
-    const caption = response.choices[0]?.message?.content?.trim();
-    if (!caption) return null;
+    const content = response.choices[0]?.message?.content?.trim();
+    if (!content) return null;
 
-    return caption.length > 250 ? caption.substring(0, 247) + "..." : caption;
+    try {
+      // AI trả về dạng JSON để lấy cả Caption đăng bài và Text trên video
+      const parsed = JSON.parse(content);
+      return parsed;
+    } catch {
+      // Nếu AI không trả về JSON, coi như đó là caption thuần
+      return { caption: content, topText: title, bottomText: "最後まで見て 😂" };
+    }
   } catch (err: any) {
     logger.error(`OpenAI error: ${err.message}`);
     return null;
@@ -72,14 +84,36 @@ export async function processPendingCaptions(): Promise<void> {
       continue;
     }
 
-    const caption = await generateCaption(video.title);
+    const aiResult: any = await generateCaption(video.title);
 
-    if (caption) {
+    if (aiResult) {
+      let finalPath = video.localPath;
+
+      // Thực hiện Edit Video nếu file tồn tại
+      if (fs.existsSync(video.localPath)) {
+        const editedPath = await editVideo(video.localPath, {
+          topText: aiResult.topText,
+          bottomText: aiResult.bottomText,
+          zoom: true,
+          mirror: true
+        });
+        
+        if (editedPath) {
+          // Xóa file gốc để tiết kiệm dung lượng
+          try { fs.unlinkSync(video.localPath); } catch {}
+          finalPath = editedPath;
+        }
+      }
+
       await db.videoLibrary.update({
         where: { id: video.id },
-        data: { caption, status: "ready" },
+        data: { 
+          caption: aiResult.caption, 
+          localPath: finalPath,
+          status: "ready" 
+        },
       });
-      logger.success(`Caption OK: ${caption.substring(0, 60)}...`);
+      logger.success(`Edit & Caption OK: ${aiResult.caption.substring(0, 60)}...`);
     } else {
       // Lỗi AI → dùng caption dự phòng
       await db.videoLibrary.update({
