@@ -53,11 +53,13 @@ export async function editVideo(inputPath: string, options: EditOptions): Promis
       filter += `,hflip`;
     }
 
-    // Thêm Text trên
-    filter += `,drawtext=${fontOption}text='${cleanTop}':fontcolor=0x33CCFF:fontsize=64:x=(w-text_w)/2:y=250:shadowcolor=black:shadowx=2:shadowy=2`;
+    // Thêm Text trên (Đặt vào vùng đen phía trên video)
+    // y= (1920 - (video_height)) / 4  -> Đưa vào giữa khoảng đen trên
+    filter += `,drawtext=${fontOption}text='${cleanTop}':fontcolor=0x33CCFF:fontsize=70:x=(w-text_w)/2:y=(1920-(ih*1.05))/4:shadowcolor=black:shadowx=2:shadowy=2`;
     
-    // Thêm Text dưới
-    filter += `,drawtext=${fontOption}text='${cleanBottom}':fontcolor=white:fontsize=50:x=(w-text_w)/2:y=h-350:shadowcolor=black:shadowx=2:shadowy=2`;
+    // Thêm Text dưới (Đặt vào vùng đen phía dưới video)
+    // y= 1920 - (1920 - (video_height)) / 4 -> Đưa vào giữa khoảng đen dưới
+    filter += `,drawtext=${fontOption}text='${cleanBottom}':fontcolor=white:fontsize=55:x=(w-text_w)/2:y=1920-(1920-(ih*1.05))/4-text_h:shadowcolor=black:shadowx=2:shadowy=2`;
 
     const command = `ffmpeg -i "${inputPath}" -vf "${filter}" -c:v libx264 -crf 23 -preset fast -c:a copy "${outputPath}" -y`;
 
