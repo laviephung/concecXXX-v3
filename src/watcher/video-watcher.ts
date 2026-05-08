@@ -35,8 +35,13 @@ async function waitUntilStable(filePath: string, intervalMs = 1500, maxWaitMs = 
 async function registerVideo(filePath: string): Promise<void> {
   const fileName = path.basename(filePath, ".mp4");
 
-  // Bỏ qua file temp hoặc không phải mp4
-  if (!filePath.endsWith(".mp4") || fileName.startsWith(".") || fileName.includes(".tmp")) return;
+  // Bỏ qua file temp, file đã edit hoặc không phải mp4
+  if (
+    !filePath.endsWith(".mp4") || 
+    fileName.startsWith(".") || 
+    fileName.includes(".tmp") || 
+    fileName.endsWith("_edited")
+  ) return;
 
   // Kiểm tra DB — nếu đã có rồi thì bỏ qua
   const existing = await db.videoLibrary.findFirst({
